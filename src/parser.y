@@ -38,13 +38,3 @@ rotation:	  ROTATION '(' NUM ',' NUM ',' NUM ')' {
 			printf("ROTATE(%ld, %ld, %ld)", $3, $5, $7);
 		}
 		;
-%%
-
-char *progname;
-int lineno = 1;
-
-int main(int argc, char *argv[])
-{
-	yyparse();
-	return 0;
-}
