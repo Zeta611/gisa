@@ -1,4 +1,4 @@
-#include "../build/src/parser.tab.h"
+#include "parser.tab.h"
 #include <stdbool.h>
 #include <stdio.h>
 

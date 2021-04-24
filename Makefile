@@ -8,7 +8,7 @@ OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
 DEPS := $(OBJS:.o=.d)
 
 INC_DIRS := $(shell find $(SRC_DIRS) -type d)
-INC_FLAGS := $(addprefix -I,$(INC_DIRS))
+INC_FLAGS := $(addprefix -I,$(INC_DIRS)) -I$(BUILD_DIR)/src
 
 CC := gcc
 CFLAGS := -O0 -Wall -Wextra -Wpedantic -std=c17
@@ -24,7 +24,7 @@ LFLAGS :=
 $(BUILD_DIR)/$(TARGET_EXEC): $(OBJS)
 	$(CC) $(OBJS) -o $@ $(LDFLAGS)
 
-$(BUILD_DIR)/%.c.o: %.c build/src/parser.tab.c
+$(BUILD_DIR)/%.c.o: %.c $(BUILD_DIR)/src/parser.tab.c
 	mkdir -p $(dir $@)
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
