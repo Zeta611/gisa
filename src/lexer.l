@@ -1,4 +1,5 @@
 %{
+#include "ast.h"
 #include "parser.tab.h"
 #include <stdio.h>
 
@@ -18,7 +19,7 @@ par	[\[\](){}]
 {ws}	{ ; }	// skip whitespaces
 \n	{ ++lineno; }
 
-{int}	{ sscanf(yytext, "%ld", &yylval); return NUM; }
+{int}	{ sscanf(yytext, "%lld", &yylval.num); return NUM; }
 
 {op}	{ return yytext[0]; }
 {par}	{ return yytext[0]; }

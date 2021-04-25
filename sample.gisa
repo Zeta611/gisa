@@ -1,0 +1,9 @@
+init([0, 1] * [0, 1]);
+translation(1, 0);
+iter {
+	{
+		translation(1, 0)
+	} or {
+		rotation(0, 0, 90)
+	}
+}

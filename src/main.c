@@ -1,3 +1,4 @@
+#include "ast.h"
 #include "parser.tab.h"
 #include <errno.h>
 #include <stdio.h>
@@ -25,7 +26,10 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	yyparse();
+	ASTNode *ast = NULL;
+	yyparse(&ast);
+	print_ast(ast);
+	putchar('\n');
 
 	if (fin) {
 		if (fclose(yyin)) {
