@@ -15,6 +15,8 @@
 
 %type	<node>	prgm init translation rotation block region interval atom
 
+%right	';'
+
 %parse-param { ASTNode **ast }
 
 %%
