@@ -101,56 +101,56 @@ ASTNode *num_node(long long num)
 	return n;
 }
 
-// Print an AST.
-void print_ast(const ASTNode *ast)
+// Print the S-expression of the AST `ast`.
+void p_sexp_ast(const ASTNode *ast)
 {
 	putchar('(');
 	switch (ast->type) {
 	case INIT_T:
 		fputs("init ", stdout);
-		print_ast(ast->u.init_region);
+		p_sexp_ast(ast->u.init_region);
 		break;
 	case TRANSLATION_T:
 		fputs("translation ", stdout);
-		print_ast(ast->u.translation_args.u);
+		p_sexp_ast(ast->u.translation_args.u);
 		putchar(' ');
-		print_ast(ast->u.translation_args.v);
+		p_sexp_ast(ast->u.translation_args.v);
 		break;
 	case ROTATION_T:
 		fputs("rotation ", stdout);
-		print_ast(ast->u.rotation_args.u);
+		p_sexp_ast(ast->u.rotation_args.u);
 		putchar(' ');
-		print_ast(ast->u.rotation_args.v);
+		p_sexp_ast(ast->u.rotation_args.v);
 		putchar(' ');
-		print_ast(ast->u.rotation_args.theta);
+		p_sexp_ast(ast->u.rotation_args.theta);
 		break;
 	case SEQUENCE_T:
 		fputs("sequence ", stdout);
-		print_ast(ast->u.sequence_ps.p1);
+		p_sexp_ast(ast->u.sequence_ps.p1);
 		putchar(' ');
-		print_ast(ast->u.sequence_ps.p2);
+		p_sexp_ast(ast->u.sequence_ps.p2);
 		break;
 	case OR_T:
 		fputs("or ", stdout);
-		print_ast(ast->u.or_ps.p1);
+		p_sexp_ast(ast->u.or_ps.p1);
 		putchar(' ');
-		print_ast(ast->u.or_ps.p2);
+		p_sexp_ast(ast->u.or_ps.p2);
 		break;
 	case ITER_T:
 		fputs("iter ", stdout);
-		print_ast(ast->u.iter_body);
+		p_sexp_ast(ast->u.iter_body);
 		break;
 	case REGION_T:
 		fputs("region ", stdout);
-		print_ast(ast->u.region_ts.t1);
+		p_sexp_ast(ast->u.region_ts.t1);
 		putchar(' ');
-		print_ast(ast->u.region_ts.t2);
+		p_sexp_ast(ast->u.region_ts.t2);
 		break;
 	case INTERVAL_T:
 		fputs("interval ", stdout);
-		print_ast(ast->u.interval_ns.n1);
+		p_sexp_ast(ast->u.interval_ns.n1);
 		putchar(' ');
-		print_ast(ast->u.interval_ns.n2);
+		p_sexp_ast(ast->u.interval_ns.n2);
 		break;
 	case NUM_T:
 		fputs("num ", stdout);

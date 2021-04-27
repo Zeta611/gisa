@@ -79,12 +79,12 @@ ASTNode *interval_node(ASTNode *n1, ASTNode *n2);
 // Initialize `NUM_T` ASTNode. Returns `NULL` if failed.
 ASTNode *num_node(long long num);
 
-// Print an AST.
+// Print the S-expression of the AST `ast`.
 // You can use the output and pipe it into a LISP, e.g., Chicken Scheme. For
 // example, to pretty print, you can use the following command:
 // `echo "(import (chicken pretty-print)) (pp '$(progname input))" | csi`
 // where `progname` may be `./build/parser` depending on how you invoke the
 // program.
-void print_ast(const ASTNode *ast);
+void p_sexp_ast(const ASTNode *ast);
 
 #endif /* ifndef AST_H */

@@ -28,8 +28,9 @@ int main(int argc, char *argv[])
 
 	ASTNode *ast = NULL;
 	yyparse(&ast);
-	print_ast(ast);
+	p_sexp_ast(ast);
 	putchar('\n');
+	// TODO: free `ast`
 
 	if (fin) {
 		if (fclose(yyin)) {
