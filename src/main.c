@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
 	yyparse(&ast);
 	p_sexp_ast(ast);
 	putchar('\n');
-	// TODO: free `ast`
+	free_ast(ast);
 
 	if (fin) {
 		if (fclose(yyin)) {

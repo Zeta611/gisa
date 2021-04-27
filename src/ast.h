@@ -87,4 +87,6 @@ ASTNode *num_node(long long num);
 // program.
 void p_sexp_ast(const ASTNode *ast);
 
+void free_ast(ASTNode *ast);
+
 #endif /* ifndef AST_H */

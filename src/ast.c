@@ -159,3 +159,43 @@ void p_sexp_ast(const ASTNode *ast)
 	}
 	putchar(')');
 }
+
+void free_ast(ASTNode *ast)
+{
+	switch (ast->type) {
+	case INIT_T:
+		free_ast(ast->u.init_region);
+		break;
+	case TRANSLATION_T:
+		free_ast(ast->u.translation_args.u);
+		free_ast(ast->u.translation_args.v);
+		break;
+	case ROTATION_T:
+		free_ast(ast->u.rotation_args.u);
+		free_ast(ast->u.rotation_args.v);
+		free_ast(ast->u.rotation_args.theta);
+		break;
+	case SEQUENCE_T:
+		free_ast(ast->u.sequence_ps.p1);
+		free_ast(ast->u.sequence_ps.p2);
+		break;
+	case OR_T:
+		free_ast(ast->u.or_ps.p1);
+		free_ast(ast->u.or_ps.p2);
+		break;
+	case ITER_T:
+		free_ast(ast->u.iter_body);
+		break;
+	case REGION_T:
+		free_ast(ast->u.region_ts.t1);
+		free_ast(ast->u.region_ts.t2);
+		break;
+	case INTERVAL_T:
+		free_ast(ast->u.interval_ns.n1);
+		free_ast(ast->u.interval_ns.n2);
+		break;
+	case NUM_T:
+		break;
+	}
+	free(ast);
+}
