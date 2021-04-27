@@ -26,11 +26,13 @@ int main(int argc, char *argv[])
 		}
 	}
 
+	ASTNode *nlist = NULL; // owns all allocated `ASTNode`s.
 	ASTNode *ast = NULL;
-	yyparse(&ast);
-	p_sexp_ast(ast);
-	putchar('\n');
-	free_ast(ast);
+	if (!yyparse(&nlist, &ast)) {
+		p_sexp_ast(ast);
+		putchar('\n');
+	}
+	free_nodes(nlist);
 
 	if (fin) {
 		if (fclose(yyin)) {

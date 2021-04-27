@@ -50,34 +50,35 @@ typedef struct ASTNode {
 		// NUM_T
 		long long num;
 	} u;
+	struct ASTNode *next;
 } ASTNode;
 
 // Initialize `INIT_T` ASTNode. Returns `NULL` if failed.
-ASTNode *init_node(ASTNode *region);
+ASTNode *init_node(ASTNode **nlist, ASTNode *region);
 
 // Initialize `TRANSLATION_T` ASTNode. Returns `NULL` if failed.
-ASTNode *translation_node(ASTNode *u, ASTNode *v);
+ASTNode *translation_node(ASTNode **nlist, ASTNode *u, ASTNode *v);
 
 // Initialize `ROTATION_T` ASTNode. Returns `NULL` if failed.
-ASTNode *rotation_node(ASTNode *u, ASTNode *v, ASTNode *theta);
+ASTNode *rotation_node(ASTNode **nlist, ASTNode *u, ASTNode *v, ASTNode *theta);
 
 // Initialize `SEQUENCE_T` ASTNode. Returns `NULL` if failed.
-ASTNode *sequence_node(ASTNode *p1, ASTNode *p2);
+ASTNode *sequence_node(ASTNode **nlist, ASTNode *p1, ASTNode *p2);
 
 // Initialize `OR_T` ASTNode. Returns `NULL` if failed.
-ASTNode *or_node(ASTNode *p1, ASTNode *p2);
+ASTNode *or_node(ASTNode **nlist, ASTNode *p1, ASTNode *p2);
 
 // Initialize `ITER_T` ASTNode. Returns `NULL` if failed.
-ASTNode *iter_node(ASTNode *body);
+ASTNode *iter_node(ASTNode **nlist, ASTNode *body);
 
 // Initialize `REGION_T` ASTNode. Returns `NULL` if failed.
-ASTNode *region_node(ASTNode *t1, ASTNode *t2);
+ASTNode *region_node(ASTNode **nlist, ASTNode *t1, ASTNode *t2);
 
 // Initialize `INTERVAL_T` ASTNode. Returns `NULL` if failed.
-ASTNode *interval_node(ASTNode *n1, ASTNode *n2);
+ASTNode *interval_node(ASTNode **nlist, ASTNode *n1, ASTNode *n2);
 
 // Initialize `NUM_T` ASTNode. Returns `NULL` if failed.
-ASTNode *num_node(long long num);
+ASTNode *num_node(ASTNode **nlist, long long num);
 
 // Print the S-expression of the AST `ast`.
 // You can use the output and pipe it into a LISP, e.g., Chicken Scheme. For
@@ -87,6 +88,6 @@ ASTNode *num_node(long long num);
 // program.
 void p_sexp_ast(const ASTNode *ast);
 
-void free_ast(ASTNode *ast);
+void free_nodes(ASTNode *nlist);
 
 #endif /* ifndef AST_H */

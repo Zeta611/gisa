@@ -1,9 +1,24 @@
-%{
-#include "ast.h"
+%code {
 #include <stdio.h>
-%}
+}
 
-%start	prgm
+%code requires {
+#include "ast.h"
+}
+
+%code provides {
+// `SS` must not have any side-effect. `SS` is intended to be substituted with
+// yacc's `$$`.
+#define CHK_NULL_NODE(SS, NODE)                                                \
+	do {                                                                   \
+		if (!((SS) = (NODE))) {                                        \
+			fprintf(stderr, "Failed to allocate memory.\n");       \
+			YYABORT;                                               \
+		}                                                              \
+	} while (0)
+}
+
+%start	hook
 
 %union {
 	long long num;
@@ -17,30 +32,33 @@
 
 %right	';'
 
-%parse-param { ASTNode **ast }
+%parse-param { ASTNode **nlist } { ASTNode **ast }
 
 %%
-
+hook:	  prgm	{ *ast = $1; }
+	;
 prgm:	  init
 	| translation
 	| rotation
-	| prgm ';' prgm	{ $$ = *ast = sequence_node($1, $3); }
-	| block OR block	{ $$ = *ast = or_node($1, $3); }
-	| ITER block	{ $$ = *ast = iter_node($2); }
+	| prgm ';' prgm	{ CHK_NULL_NODE($$, sequence_node(nlist, $1, $3)); }
+	| block OR block	{ CHK_NULL_NODE($$, or_node(nlist, $1, $3)); }
+	| ITER block	{ CHK_NULL_NODE($$, iter_node(nlist, $2)); }
 	;
-block:	  '{' prgm '}'	{ $$ = *ast = $2; }
+block:	  '{' prgm '}'	{ CHK_NULL_NODE($$, $2); }
 	;
-init:	  INIT '(' region ')'	{ $$ = *ast = init_node($3); }
+init:	  INIT '(' region ')'	{ CHK_NULL_NODE($$, init_node(nlist, $3)); }
 	;
-region:	  interval '*' interval	{ $$ = *ast = region_node($1, $3); }
+region:	  interval '*' interval	{
+		CHK_NULL_NODE($$, region_node(nlist, $1, $3)); }
 	;
-interval:	  '[' atom ',' atom ']' { $$ = *ast = interval_node($2, $4); }
+interval:	  '[' atom ',' atom ']' {
+			CHK_NULL_NODE($$, interval_node(nlist, $2, $4)); }
 		;
 translation:	  TRANSLATION '(' atom ',' atom ')' {
-			$$ = *ast = translation_node($3, $5); }
+			CHK_NULL_NODE($$, translation_node(nlist, $3, $5)); }
 		;
 rotation:	  ROTATION '(' atom ',' atom ',' atom ')' {
-			$$ = *ast = rotation_node($3, $5, $7); }
+			CHK_NULL_NODE($$, rotation_node(nlist, $3, $5, $7)); }
 		;
-atom:	  NUM	{ $$ = *ast = num_node($1); }
+atom:	  NUM	{ CHK_NULL_NODE($$, num_node(nlist, $1)); }
 	;
