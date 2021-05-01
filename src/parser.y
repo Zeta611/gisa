@@ -21,7 +21,7 @@
 %start	hook
 
 %union {
-	long long num;
+	double num;
 	ASTNode *node;
 }
 

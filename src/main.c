@@ -1,9 +1,11 @@
 #include "ast.h"
+#include "eval.h"
 #include "parser.tab.h"
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 char *progname;
 int lineno = 1;
@@ -31,6 +33,11 @@ int main(int argc, char *argv[])
 	if (!yyparse(&nlist, &ast)) {
 		p_sexp_ast(ast);
 		putchar('\n');
+
+		srand(time(NULL));
+		Env env = {0., 0.};
+		eval(ast, &env);
+		printf("x: %lf, y: %lf\n", env.x, env.y);
 	}
 	free_nodes(nlist);
 

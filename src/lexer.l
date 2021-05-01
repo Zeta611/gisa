@@ -10,6 +10,8 @@ ws	[ \t]+
 
 digit	[0-9]
 int	{digit}+
+pow	[eE][+-]?{int}
+real	(({int}\.?)|({digit}*\.{int})){pow}?
 
 op	[-+*/^]
 par	[\[\](){}]
@@ -18,7 +20,7 @@ par	[\[\](){}]
 {ws}	{ ; }	// skip whitespaces
 \n	{ ++lineno; }
 
-{int}	{ sscanf(yytext, "%lld", &yylval.num); return NUM; }
+{real}	{ sscanf(yytext, "%lf", &yylval.num); return NUM; }
 
 {op}	{ return yytext[0]; }
 {par}	{ return yytext[0]; }

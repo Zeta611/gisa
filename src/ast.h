@@ -48,7 +48,7 @@ typedef struct ASTNode {
 			struct ASTNode *n2;
 		} interval_ns;
 		// NUM_T
-		long long num;
+		double num;
 	} u;
 	struct ASTNode *next;
 } ASTNode;
@@ -78,7 +78,7 @@ ASTNode *region_node(ASTNode **nlist, ASTNode *t1, ASTNode *t2);
 ASTNode *interval_node(ASTNode **nlist, ASTNode *n1, ASTNode *n2);
 
 // Initialize `NUM_T` ASTNode. Returns `NULL` if failed.
-ASTNode *num_node(ASTNode **nlist, long long num);
+ASTNode *num_node(ASTNode **nlist, double num);
 
 // Print the S-expression of the AST `ast`.
 // You can use the output and pipe it into a LISP, e.g., Chicken Scheme. For

@@ -1,6 +1,8 @@
 #include "ast.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <tgmath.h>
+#define EPSILON 1E-6
 
 // Initialize `INIT_T` ASTNode. Returns `NULL` if failed.
 ASTNode *init_node(ASTNode **nlist, ASTNode *region)
@@ -107,7 +109,7 @@ ASTNode *interval_node(ASTNode **nlist, ASTNode *n1, ASTNode *n2)
 }
 
 // Initialize `NUM_T` ASTNode. Returns `NULL` if failed.
-ASTNode *num_node(ASTNode **nlist, long long num)
+ASTNode *num_node(ASTNode **nlist, double num)
 {
 	ASTNode *n = malloc(sizeof *n);
 	if (!n) {
@@ -171,7 +173,13 @@ void p_sexp_ast(const ASTNode *ast)
 		break;
 	case NUM_T:
 		fputs("num ", stdout);
-		printf("%lld", ast->u.num);
+		if (fmod(ast->u.num, 1.) < EPSILON) {
+			printf("%.0lf", ast->u.num);
+		} else if (fabs(ast->u.num) < 10000.) {
+			printf("%lf", ast->u.num);
+		} else {
+			printf("%e", ast->u.num);
+		}
 		break;
 	}
 	putchar(')');
