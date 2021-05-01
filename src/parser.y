@@ -16,6 +16,8 @@
 			YYABORT;                                               \
 		}                                                              \
 	} while (0)
+
+int yyerror(ASTNode **nlist, ASTNode **ast, const char *msg);
 }
 
 %start	hook
@@ -25,7 +27,7 @@
 	ASTNode *node;
 }
 
-%token		OR INIT ITER TRANSLATION ROTATION
+%token		OR INIT ITER TRANSLATION ROTATION ERR
 %token	<num>	NUM
 
 %type	<node>	prgm init translation rotation block region interval atom
@@ -61,4 +63,16 @@ rotation:	  ROTATION '(' atom ',' atom ',' atom ')' {
 			CHK_NULL_NODE($$, rotation_node(nlist, $3, $5, $7)); }
 		;
 atom:	  NUM	{ CHK_NULL_NODE($$, num_node(nlist, $1)); }
+	| ERR	{ yyerror(nlist, ast, "syntax error"); YYABORT; }
 	;
+%%
+
+extern int lineno;
+extern char *progname;
+int yyerror(ASTNode **nlist, ASTNode **ast, const char *msg)
+{
+	(void)nlist;
+	(void)ast;
+	fprintf(stderr, "%s: %s near line %d\n", progname, msg, lineno);
+	return 0;
+}

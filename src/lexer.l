@@ -33,4 +33,4 @@ par	[\[\](){}]
 "translation"	{ return TRANSLATION; }
 "rotation"	{ return ROTATION; }
 
-.	{ printf("unknown token %c\n", yytext[0]); }
+.	{ fprintf(stderr, "unknown token %c\n", yytext[0]); return ERR; }
