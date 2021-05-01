@@ -1,4 +1,4 @@
-TARGET_EXEC := parser
+TARGET_EXEC := gisa
 
 BUILD_DIR := ./build
 SRC_DIRS := ./src
@@ -11,9 +11,9 @@ INC_DIRS := $(shell find $(SRC_DIRS) -type d)
 INC_FLAGS := $(addprefix -I,$(INC_DIRS)) -I$(BUILD_DIR)/src
 
 CC := gcc
-CFLAGS := -O0 -Wall -Wextra -Wpedantic -std=c17
-CPPFLAGS := $(INC_FLAGS) -MMD -MP
-LDFLAGS := -ly -ll
+CFLAGS := -O0 -Wall -Wextra -Wpedantic -std=c17 -g
+CPPFLAGS := $(INC_FLAGS) -MMD -MP #-DNDEBUG
+LDFLAGS := -ly -ll -lm
 
 YACC := bison
 YFLAGS := -d
@@ -21,7 +21,7 @@ YFLAGS := -d
 LEX := flex
 LFLAGS :=
 
-$(BUILD_DIR)/$(TARGET_EXEC): $(OBJS)
+$(BUILD_DIR)/$(TARGET_EXEC): $(OBJS) $(BUILD_DIR)/src/parser.tab.c $(BUILD_DIR)/src/lexer.yy.c
 	$(CC) $(OBJS) -o $@ $(LDFLAGS)
 
 $(BUILD_DIR)/%.c.o: %.c $(BUILD_DIR)/src/parser.tab.c
