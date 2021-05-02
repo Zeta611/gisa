@@ -1,5 +1,6 @@
 #ifndef AST_H
 #define AST_H
+#include <stdio.h>
 
 typedef struct ASTNode {
 	enum { INIT_T,
@@ -80,13 +81,13 @@ ASTNode *interval_node(ASTNode **nlist, ASTNode *n1, ASTNode *n2);
 // Initialize `NUM_T` ASTNode. Returns `NULL` if failed.
 ASTNode *num_node(ASTNode **nlist, double num);
 
-// Print the S-expression of the AST `ast`.
+// Print the S-expression of the AST `ast` to `stream`.
 // You can use the output and pipe it into a LISP, e.g., Chicken Scheme. For
 // example, to pretty print, you can use the following command:
 // `echo "(import (chicken pretty-print)) (pp '$(progname input))" | csi`
 // where `progname` may be `./build/parser` depending on how you invoke the
 // program.
-void p_sexp_ast(const ASTNode *ast);
+void p_sexp_ast(FILE *stream, const ASTNode *ast);
 
 void free_nodes(ASTNode *nlist);
 

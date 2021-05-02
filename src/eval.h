@@ -1,5 +1,6 @@
 #ifndef EVAL_H
 #define EVAL_H
+#include <stdbool.h>
 
 typedef struct Env {
 	double x;
@@ -7,6 +8,6 @@ typedef struct Env {
 } Env;
 
 struct ASTNode;
-void eval(const struct ASTNode *ast, Env *env);
+void eval(const struct ASTNode *ast, Env *env, int iter_max, bool verbose);
 
 #endif /* ifndef EVAL_H */

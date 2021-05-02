@@ -121,68 +121,68 @@ ASTNode *num_node(ASTNode **nlist, double num)
 }
 
 // Print the S-expression of the AST `ast`.
-void p_sexp_ast(const ASTNode *ast)
+void p_sexp_ast(FILE *stream, const ASTNode *ast)
 {
-	putchar('(');
+	putc('(', stream);
 	switch (ast->type) {
 	case INIT_T:
-		fputs("init ", stdout);
-		p_sexp_ast(ast->u.init_region);
+		fputs("init ", stream);
+		p_sexp_ast(stream, ast->u.init_region);
 		break;
 	case TRANSLATION_T:
-		fputs("translation ", stdout);
-		p_sexp_ast(ast->u.translation_args.u);
-		putchar(' ');
-		p_sexp_ast(ast->u.translation_args.v);
+		fputs("translation ", stream);
+		p_sexp_ast(stream, ast->u.translation_args.u);
+		putc(' ', stream);
+		p_sexp_ast(stream, ast->u.translation_args.v);
 		break;
 	case ROTATION_T:
-		fputs("rotation ", stdout);
-		p_sexp_ast(ast->u.rotation_args.u);
-		putchar(' ');
-		p_sexp_ast(ast->u.rotation_args.v);
-		putchar(' ');
-		p_sexp_ast(ast->u.rotation_args.theta);
+		fputs("rotation ", stream);
+		p_sexp_ast(stream, ast->u.rotation_args.u);
+		putc(' ', stream);
+		p_sexp_ast(stream, ast->u.rotation_args.v);
+		putc(' ', stream);
+		p_sexp_ast(stream, ast->u.rotation_args.theta);
 		break;
 	case SEQUENCE_T:
-		fputs("sequence ", stdout);
-		p_sexp_ast(ast->u.sequence_ps.p1);
-		putchar(' ');
-		p_sexp_ast(ast->u.sequence_ps.p2);
+		fputs("sequence ", stream);
+		p_sexp_ast(stream, ast->u.sequence_ps.p1);
+		putc(' ', stream);
+		p_sexp_ast(stream, ast->u.sequence_ps.p2);
 		break;
 	case OR_T:
-		fputs("or ", stdout);
-		p_sexp_ast(ast->u.or_ps.p1);
-		putchar(' ');
-		p_sexp_ast(ast->u.or_ps.p2);
+		fputs("or ", stream);
+		p_sexp_ast(stream, ast->u.or_ps.p1);
+		putc(' ', stream);
+		p_sexp_ast(stream, ast->u.or_ps.p2);
 		break;
 	case ITER_T:
-		fputs("iter ", stdout);
-		p_sexp_ast(ast->u.iter_body);
+		fputs("iter ", stream);
+		p_sexp_ast(stream, ast->u.iter_body);
 		break;
 	case REGION_T:
-		fputs("region ", stdout);
-		p_sexp_ast(ast->u.region_ts.t1);
-		putchar(' ');
-		p_sexp_ast(ast->u.region_ts.t2);
+		fputs("region ", stream);
+		p_sexp_ast(stream, ast->u.region_ts.t1);
+		putc(' ', stream);
+		p_sexp_ast(stream, ast->u.region_ts.t2);
 		break;
 	case INTERVAL_T:
-		fputs("interval ", stdout);
-		p_sexp_ast(ast->u.interval_ns.n1);
-		putchar(' ');
-		p_sexp_ast(ast->u.interval_ns.n2);
+		fputs("interval ", stream);
+		p_sexp_ast(stream, ast->u.interval_ns.n1);
+		putc(' ', stream);
+		p_sexp_ast(stream, ast->u.interval_ns.n2);
 		break;
 	case NUM_T:
-		fputs("num ", stdout);
+		fputs("num ", stream);
 		if (fmod(ast->u.num, 1.) < EPSILON) {
-			printf("%.0lf", ast->u.num);
+			fprintf(stream, "%.0lf", ast->u.num);
 		} else if (fabs(ast->u.num) < 10000.) {
-			printf("%lf", ast->u.num);
+			fprintf(stream, "%lf", ast->u.num);
 		} else {
-			printf("%e", ast->u.num);
+			fprintf(stream, "%e", ast->u.num);
 		}
 		break;
 	}
-	putchar(')');
+	putc(')', stream);
 }
 
 void free_nodes(ASTNode *nlist)
