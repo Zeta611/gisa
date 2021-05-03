@@ -16,9 +16,13 @@ void eval(const ASTNode *ast, Env *env, int iter_max, bool verbose)
 {
 	switch (ast->type) {
 	case INIT_T:
+		env->init = true;
 		eval(ast->u.init_region, env, iter_max, verbose);
 		break;
 	case TRANSLATION_T: {
+		if (!env->init) {
+			return;
+		}
 		double u = ast->u.translation_args.u->u.num;
 		double v = ast->u.translation_args.v->u.num;
 		env->x += u;
@@ -31,6 +35,9 @@ void eval(const ASTNode *ast, Env *env, int iter_max, bool verbose)
 		break;
 	}
 	case ROTATION_T: {
+		if (!env->init) {
+			return;
+		}
 		double u = ast->u.rotation_args.u->u.num;
 		double v = ast->u.rotation_args.v->u.num;
 		double deg = ast->u.rotation_args.theta->u.num / 180. * M_PI;
@@ -58,6 +65,9 @@ void eval(const ASTNode *ast, Env *env, int iter_max, bool verbose)
 		eval(ast->u.sequence_ps.p2, env, iter_max, verbose);
 		break;
 	case OR_T: {
+		if (!env->init) {
+			return;
+		}
 		int right = randi(2);
 		if (verbose) {
 			fprintf(stderr, "OR selected %s\n",
@@ -71,6 +81,9 @@ void eval(const ASTNode *ast, Env *env, int iter_max, bool verbose)
 		break;
 	}
 	case ITER_T: {
+		if (!env->init) {
+			return;
+		}
 		int iter = randi(iter_max + 1);
 		if (verbose) {
 			fprintf(stderr, "Iterate %d times\n", iter);

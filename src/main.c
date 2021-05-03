@@ -16,6 +16,7 @@ extern FILE *yyin;
 int main(int argc, char *argv[])
 {
 	progname = argv[0];
+	int ecode = EXIT_SUCCESS;
 
 	// Parse command line arguments
 	// Input file name
@@ -151,10 +152,18 @@ int main(int argc, char *argv[])
 			putc('\n', stderr);
 		}
 
+		Env env = {.init = false, .x = 0., .y = 0.};
 		srand(seed);
-		Env env = {0., 0.};
 		eval(ast, &env, iter_max, verbose);
-		printf("(%lf, %lf)\n", env.x, env.y);
+		if (env.init) {
+			printf("(%lf, %lf)\n", env.x, env.y);
+		} else {
+			ecode = false;
+			fprintf(stderr,
+				"%s: syntax error: "
+				"operation before initialization\n",
+				progname);
+		}
 	}
 
 	// Clean up
@@ -167,5 +176,5 @@ int main(int argc, char *argv[])
 			exit(EXIT_FAILURE);
 		}
 	}
-	return 0;
+	return ecode;
 }

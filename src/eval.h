@@ -3,6 +3,7 @@
 #include <stdbool.h>
 
 typedef struct Env {
+	bool init;
 	double x;
 	double y;
 } Env;
