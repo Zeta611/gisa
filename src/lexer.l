@@ -22,10 +22,7 @@ par	[\[\](){}]
 
 {real}	{ sscanf(yytext, "%lf", &yylval.num); return NUM; }
 
-{op}	{ return yytext[0]; }
-{par}	{ return yytext[0]; }
-\,	{ return yytext[0]; }
-\;	{ return yytext[0]; }
+{op}|{par}|\,|\;	{ return yytext[0]; }
 
 "or"	{ return OR; }
 "init"	{ return INIT; }

@@ -30,7 +30,8 @@ int yyerror(ASTNode **nlist, ASTNode **ast, const char *msg);
 %token		OR INIT ITER TRANSLATION ROTATION ERR
 %token	<num>	NUM
 
-%type	<node>	prgm init translation rotation block region interval atom
+%type	<node>	prgm init translation rotation sequence or iter
+		block region interval atom
 
 %right	';'
 
@@ -42,26 +43,35 @@ hook:	  prgm	{ *ast = $1; }
 prgm:	  init
 	| translation
 	| rotation
-	| prgm ';' prgm	{ CHK_NULL_NODE($$, sequence_node(nlist, $1, $3)); }
-	| block OR block	{ CHK_NULL_NODE($$, or_node(nlist, $1, $3)); }
-	| ITER block	{ CHK_NULL_NODE($$, iter_node(nlist, $2)); }
-	;
-block:	  '{' prgm '}'	{ CHK_NULL_NODE($$, $2); }
+	| sequence
+	| or
+	| iter
 	;
 init:	  INIT '(' region ')'	{ CHK_NULL_NODE($$, init_node(nlist, $3)); }
 	;
-region:	  interval '*' interval	{
-		CHK_NULL_NODE($$, region_node(nlist, $1, $3)); }
-	;
-interval:	  '[' atom ',' atom ']' {
-			CHK_NULL_NODE($$, interval_node(nlist, $2, $4)); }
-		;
 translation:	  TRANSLATION '(' atom ',' atom ')' {
 			CHK_NULL_NODE($$, translation_node(nlist, $3, $5)); }
 		;
 rotation:	  ROTATION '(' atom ',' atom ',' atom ')' {
 			CHK_NULL_NODE($$, rotation_node(nlist, $3, $5, $7)); }
 		;
+sequence:	  prgm ';' prgm	{
+			CHK_NULL_NODE($$, sequence_node(nlist, $1, $3)); }
+		;
+or:	  block OR block	{ CHK_NULL_NODE($$, or_node(nlist, $1, $3)); }
+	;
+iter:	  ITER block	{ CHK_NULL_NODE($$, iter_node(nlist, $2)); }
+	;
+
+block:	  '{' prgm '}'	{ CHK_NULL_NODE($$, $2); }
+	;
+region:	  interval '*' interval	{
+		CHK_NULL_NODE($$, region_node(nlist, $1, $3)); }
+	;
+interval:	  '[' atom ',' atom ']'	{
+			CHK_NULL_NODE($$, interval_node(nlist, $2, $4)); }
+		;
+
 atom:	  NUM	{ CHK_NULL_NODE($$, num_node(nlist, $1)); }
 	| ERR	{ yyerror(nlist, ast, "syntax error"); YYABORT; }
 	;
