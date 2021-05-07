@@ -108,6 +108,19 @@ ASTNode *interval_node(ASTNode **nlist, ASTNode *n1, ASTNode *n2)
 	return n;
 }
 
+// Initialize `OP_T` ASTNode. Returns `NULL` if failed.
+ASTNode *op_node(ASTNode **nlist, enum Op op, ASTNode *larg, ASTNode *rarg)
+{
+	ASTNode *n = malloc(sizeof *n);
+	if (!n) {
+		return NULL;
+	}
+	*n = (ASTNode){OP_T, .u.op_dat = {op, larg, rarg},
+		       .next = *nlist ? *nlist : NULL};
+	*nlist = n;
+	return n;
+}
+
 // Initialize `NUM_T` ASTNode. Returns `NULL` if failed.
 ASTNode *num_node(ASTNode **nlist, double num)
 {
@@ -116,6 +129,18 @@ ASTNode *num_node(ASTNode **nlist, double num)
 		return NULL;
 	}
 	*n = (ASTNode){NUM_T, .u.num = num, .next = *nlist ? *nlist : NULL};
+	*nlist = n;
+	return n;
+}
+
+// Initialize `VAR_T` ASTNode. Returns `NULL` if failed.
+ASTNode *var_node(ASTNode **nlist, Var var)
+{
+	ASTNode *n = malloc(sizeof *n);
+	if (!n) {
+		return NULL;
+	}
+	*n = (ASTNode){VAR_T, .u.var = var, .next = *nlist ? *nlist : NULL};
 	*nlist = n;
 	return n;
 }
@@ -171,6 +196,17 @@ void p_sexp_ast(FILE *stream, const ASTNode *ast)
 		putc(' ', stream);
 		p_sexp_ast(stream, ast->u.interval_ns.n2);
 		break;
+	case OP_T: {
+		static const char op_char[] = {'+', '-', '*', '/', '^', '-'};
+		putc(op_char[ast->u.op_dat.op], stream);
+		putc(' ', stream);
+		p_sexp_ast(stream, ast->u.op_dat.larg);
+		if (ast->u.op_dat.op != NEG) {
+			putc(' ', stream);
+			p_sexp_ast(stream, ast->u.op_dat.rarg);
+		}
+		break;
+	}
 	case NUM_T:
 		fputs("num ", stream);
 		if (fmod(ast->u.num, 1.) < EPSILON) {
@@ -180,6 +216,9 @@ void p_sexp_ast(FILE *stream, const ASTNode *ast)
 		} else {
 			fprintf(stream, "%e", ast->u.num);
 		}
+		break;
+	case VAR_T:
+		fprintf(stream, "var %c", ast->u.var);
 		break;
 	}
 	putc(')', stream);

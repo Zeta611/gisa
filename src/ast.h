@@ -2,6 +2,8 @@
 #define AST_H
 #include <stdio.h>
 
+typedef enum Var { VX = 'X', VY = 'Y' } Var;
+
 typedef struct ASTNode {
 	enum { INIT_T,
 	       TRANSLATION_T,
@@ -11,7 +13,9 @@ typedef struct ASTNode {
 	       ITER_T,
 	       REGION_T,
 	       INTERVAL_T,
-	       NUM_T } type;
+	       OP_T,
+	       NUM_T,
+	       VAR_T } type;
 	union {
 		// INIT_T
 		struct ASTNode *init_region;
@@ -48,8 +52,15 @@ typedef struct ASTNode {
 			struct ASTNode *n1;
 			struct ASTNode *n2;
 		} interval_ns;
+		// OP_T
+		struct {
+			enum Op { ADD, SUB, MUL, DIV, POW, NEG } op;
+			struct ASTNode *larg, *rarg;
+		} op_dat;
 		// NUM_T
 		double num;
+		// VAR_T
+		Var var;
 	} u;
 	struct ASTNode *next;
 } ASTNode;
@@ -78,8 +89,17 @@ ASTNode *region_node(ASTNode **nlist, ASTNode *t1, ASTNode *t2);
 // Initialize `INTERVAL_T` ASTNode. Returns `NULL` if failed.
 ASTNode *interval_node(ASTNode **nlist, ASTNode *n1, ASTNode *n2);
 
+// Initialize `OP_T` ASTNode. Returns `NULL` if failed.
+ASTNode *op_node(ASTNode **nlist, enum Op op, ASTNode *larg, ASTNode *rarg);
+
+// Initialize `INUM_T` ASTNode. Returns `NULL` if failed.
+ASTNode *inum_node(ASTNode **nlist, long inum);
+
 // Initialize `NUM_T` ASTNode. Returns `NULL` if failed.
 ASTNode *num_node(ASTNode **nlist, double num);
+
+// Initialize `VAR_T` ASTNode. Returns `NULL` if failed.
+ASTNode *var_node(ASTNode **nlist, Var var);
 
 // Print the S-expression of the AST `ast` to `stream`.
 // You can use the output and pipe it into a LISP, e.g., Chicken Scheme. For

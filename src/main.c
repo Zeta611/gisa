@@ -154,15 +154,32 @@ int main(int argc, char *argv[])
 
 		Env env = {.init = false, .x = 0., .y = 0.};
 		srand(seed);
-		eval(ast, &env, iter_max, verbose);
-		if (env.init) {
+		const int ret = eval(ast, &env, iter_max, verbose);
+		switch (ret) {
+		case 0:
 			printf("(%lf, %lf)\n", env.x, env.y);
-		} else {
+			break;
+		case 1:
 			ecode = false;
 			fprintf(stderr,
-				"%s: syntax error: "
-				"operation before initialization\n",
+				"%s: error: operation before initialization\n",
 				progname);
+			break;
+		case 2:
+			ecode = false;
+			fprintf(stderr, "%s: error: number argument expected\n",
+				progname);
+			break;
+		case 3:
+			ecode = false;
+			fprintf(stderr,
+				"%s: error: polynomial evaluation failed\n",
+				progname);
+			break;
+		default:
+			ecode = false;
+			fprintf(stderr, "%s: unknown error\n", progname);
+			break;
 		}
 	}
 
