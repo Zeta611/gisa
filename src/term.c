@@ -1,11 +1,17 @@
 #include "term.h"
 #include "util.h"
 #include <assert.h>
+#include <errno.h>
+#include <float.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <tgmath.h>
+
+// All numbers less than or equal to `DBL_PRECISE_MAX` are precisely
+// representable with `double`.
+#define DBL_PRECISE_MAX ((double)(1L << DBL_MANT_DIG))
 
 // Forward declarations for static functions
 static int var_cmp(const TermNode *t1, const TermNode *t2);
@@ -14,7 +20,7 @@ static void mul_coeff(TermNode *dest, const TermNode *src);
 static void div_coeff(TermNode *dest, const TermNode *src);
 
 static bool zero(TermNode *t);
-static void reduce0(TermNode **p);
+static bool reduce0(TermNode **p);
 
 static TermNode *term_dup(const TermNode *t);
 static TermNode *var_dup(const TermNode *v);
@@ -22,7 +28,7 @@ static TermNode *var_dup(const TermNode *v);
 static void mul_var(TermNode **dest, TermNode *src);
 
 static void pow_num(TermNode **dest, TermNode *src);
-static void ipow_poly(TermNode **dest, long exp);
+static bool ipow_poly(TermNode **dest, long long exp);
 
 static void free_term(TermNode *t);
 static void print_var(const TermNode *v);
@@ -120,7 +126,9 @@ static bool zero(TermNode *t) { return t->hd.val == 0.; }
 
 // Remove zero-terms from `*p`. If `*p` is equivalent to 0, it reduces to a
 // single coefficient term of value 0.
-static void reduce0(TermNode **p)
+// This should rarely fail in practice, since it allocates memory only after
+// it has already freed more memory.
+static bool reduce0(TermNode **p)
 {
 	TermNode **hd = p;
 	while (*p) {
@@ -135,7 +143,11 @@ static void reduce0(TermNode **p)
 	if (!*hd) {
 		// `*p` was equivalent to 0, and every term has been removed.
 		*hd = coeff_term(0.);
+		if (!*hd) { // `malloc` failed.
+			return false;
+		}
 	}
+	return true;
 }
 
 // Add `src` to `dest`.
@@ -174,18 +186,14 @@ bool add_poly(TermNode **dest, TermNode *src)
 			free_term(tmp);
 		}
 	}
-	reduce0(dest);
-	return true;
+	return reduce0(dest);
 }
 
 // Subtract `src` to `dest`.
 // Argument passed to `src` must not be used after `sub_poly` is called.
 bool sub_poly(TermNode **dest, TermNode *src)
 {
-	bool success = true;
-	success = success && neg_poly(src);
-	success = success && add_poly(dest, src);
-	return success;
+	return neg_poly(src) && add_poly(dest, src);
 }
 
 static TermNode *term_dup(const TermNode *t)
@@ -210,6 +218,10 @@ static TermNode *var_dup(const TermNode *v)
 		} else {
 			*dup = term_dup(v);
 		}
+		if (!*dup) { // `term_dup` failed either for `hd` or `v`.
+			free_term(hd);
+			return NULL;
+		}
 	}
 	return hd;
 }
@@ -225,13 +237,22 @@ TermNode *poly_dup(const TermNode *p)
 		} else {
 			*dup = term_dup(p);
 		}
+		if (!*dup) { // `term_dup` failed either for `hd` or `p`.
+			goto dup_fail;
+		}
 		TermNode **vdup = &(*dup)->u.vars;
 		for (TermNode *vt = p->u.vars; vt; vt = vt->next) {
 			*vdup = term_dup(vt);
+			if (!*vdup) { // `term_dup` failed.
+				goto dup_fail;
+			}
 			vdup = &(*vdup)->next;
 		}
 	}
 	return hd;
+dup_fail:
+	free_poly(hd);
+	return NULL;
 }
 
 // Multiply `src` to `dest`--both should point directly to `VAR_TERM`s.
@@ -268,6 +289,9 @@ static void mul_var(TermNode **dest, TermNode *src)
 // Multiply `src` to `dest`.
 // Uses distributive law to multiply.
 // Argument passed to `src` must not be used after `mul_poly` is called.
+// On failure, it frees all memory held by `src` to prevent malformed list
+// structure. Although `*dest` is properly formed, it does not hold a correct
+// value, so the caller needs to free it manually upon failure.
 bool mul_poly(TermNode **dest, TermNode *src)
 {
 	// `dup` points to the head pointer initially, and then points to the
@@ -278,8 +302,15 @@ bool mul_poly(TermNode **dest, TermNode *src)
 	for (dup = p = dest; src; p = dup) {
 		if (src->next) {
 			TermNode *tmp = poly_dup(*dup);
+			if (!tmp) {
+				goto dup_fail;
+			}
 			// Get a fresh slot for a head pointer container.
 			dup = malloc(sizeof *dup);
+			if (!dup) {
+				free_poly(tmp);
+				goto dup_fail;
+			}
 			*dup = tmp;
 		}
 		TermNode *svars = src->u.vars;
@@ -287,19 +318,32 @@ bool mul_poly(TermNode **dest, TermNode *src)
 		for (TermNode **i = p; *i; i = &(*i)->next) {
 			mul_coeff(*i, src);
 			if (svars) {
-				mul_var(&(*i)->u.vars, var_dup(svars));
+				TermNode *vdup = var_dup(svars);
+				if (!vdup) {
+					if (p != dest) {
+						free_poly(*p);
+						free(p);
+					}
+					goto dup_fail;
+				}
+				mul_var(&(*i)->u.vars, vdup);
 			}
 		}
 		if (p != dest) {
-			add_poly(dest, *p);
+			bool success = add_poly(dest, *p);
 			free(p); // Allocated by `dup`.
+			if (!success) {
+				goto dup_fail;
+			}
 		}
 		TermNode *tmp = src;
 		src = src->next;
 		free_term(tmp);
 	}
-	reduce0(dest);
-	return true;
+	return reduce0(dest);
+dup_fail:
+	free_poly(src);
+	return false;
 }
 
 // Divide `src` to `dest`.
@@ -332,20 +376,29 @@ static void pow_num(TermNode **dest, TermNode *src)
 }
 
 // `exp` should be a positive integer.
-static void ipow_poly(TermNode **dest, long exp)
+static bool ipow_poly(TermNode **dest, long long exp)
 {
 	if (exp < 2) {
-		return;
+		return true;
 	}
-	TermNode *dup;
+	bool success = true;
+	TermNode *dup = NULL;
 	if (exp % 2) {
 		dup = poly_dup(*dest);
-		ipow_poly(dest, exp - 1);
+		if (!dup) {
+			return false;
+		}
+		success = ipow_poly(dest, exp - 1);
 	} else {
-		ipow_poly(dest, exp / 2);
-		dup = poly_dup(*dest);
+		success = ipow_poly(dest, exp / 2);
+		if (success) {
+			dup = poly_dup(*dest);
+			if (!dup) {
+				return false;
+			}
+		}
 	}
-	mul_poly(dest, dup);
+	return success && mul_poly(dest, dup);
 }
 
 // Exponentiate `src` to `dest`.
@@ -359,30 +412,42 @@ bool pow_poly(TermNode **dest, TermNode *src)
 		success = false;
 		goto src_cleanup;
 	}
-	if (!(*dest)->u.vars) { // `*dest` is a number term.
+	if (num_poly(*dest)) {
 		pow_num(dest, src);
 		goto src_cleanup;
 	}
-	if (src->type == COEFF_TERM) {
+
+	const double fexp = src->hd.val;
+	if (fexp != floor(fexp)) {
 		fputs("Exponentiation with a polynomial and a real number is "
 		      "not supported.\n",
 		      stderr);
 		success = false;
 		goto src_cleanup;
 	}
-
-	long exp = src->hd.val;
-	if (exp < 0) {
+	if (fexp < 0) {
 		fputs("Exponentiation with a polynomial and a negative "
 		      "integer is not supported.\n",
 		      stderr);
 		success = false;
-	} else if (exp == 0) {
+		goto src_cleanup;
+	}
+	if (fexp >= DBL_PRECISE_MAX) {
+		fputs("Exponent out of range.\n", stderr);
+		success = false;
+		goto src_cleanup;
+	}
+
+	const long long exp = fexp; // `long` is not enough on Windows machines.
+	if (exp == 0) {
 		TermNode *tmp = *dest;
-		*dest = coeff_term(1);
+		*dest = coeff_term(1.);
+		if (!*dest) {
+			success = false;
+		}
 		free_poly(tmp);
 	} else {
-		ipow_poly(dest, exp);
+		success = ipow_poly(dest, exp);
 	}
 src_cleanup:
 	free_poly(src);

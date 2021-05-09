@@ -1,6 +1,9 @@
 #ifndef UTIL_H
 #define UTIL_H
 
+#include <limits.h>
+#define DBL_LONG_MAX_P1 ((LONG_MAX / 2 + 1) * 2.0)
+
 #define ncmp(x, y)                                                             \
 	_Generic((x), long                                                     \
 		 : _Generic((y), long                                          \

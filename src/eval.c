@@ -70,8 +70,7 @@ static TermNode *eval_poly(const ASTNode *ast)
 			success = neg_poly(lt);
 			break;
 		default:
-			fprintf(stderr, "unknown op type %d\n", op);
-			abort();
+			assert(false && "Unknown op type");
 		}
 		if (!success) {
 			free_poly(lt);
@@ -79,18 +78,31 @@ static TermNode *eval_poly(const ASTNode *ast)
 		}
 		return lt;
 	}
-	case NUM_T:
-		return coeff_term(ast->u.num);
+	case NUM_T: {
+		TermNode *t = coeff_term(ast->u.num);
+		if (!t) {
+			goto mem_err;
+		}
+		return t;
+	}
 	case VAR_T: {
 		TermNode *p = coeff_term(1.);
-		TermNode *vt = var_term(ast->u.var, 1); // TODO type punning
+		if (!p) {
+			goto mem_err;
+		}
+		TermNode *vt = var_term(ast->u.var, 1);
+		if (!vt) {
+			goto mem_err;
+		}
 		p->u.vars = vt;
 		return p;
 	}
 	default:
-		fprintf(stderr, "unexpected node type %d\n", ast->type);
-		abort();
+		assert(false && "Unexpected node type");
 	}
+mem_err:
+	fputs("Failed to allocate memory.\n", stderr);
+	return NULL;
 }
 
 static void poly_err_msg(const ASTNode *ast)

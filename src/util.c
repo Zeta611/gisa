@@ -1,7 +1,5 @@
 #include "util.h"
-#include <limits.h>
 #include <math.h>
-#define DBL_LONG_MAX_P1 ((LONG_MAX / 2 + 1) * 2.0)
 
 int cmp_long(long x, long y) { return (x > y) - (x < y); }
 

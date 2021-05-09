@@ -145,6 +145,7 @@ int main(int argc, char *argv[])
 	// Begin parsing
 	ASTNode *nlist = NULL; // owns all allocated `ASTNode`s.
 	ASTNode *ast = NULL;
+	errno = 0;
 	if (!yyparse(&nlist, &ast)) {
 		if (show_parse) {
 			// Print the S-expression to `stderr`.
@@ -154,33 +155,51 @@ int main(int argc, char *argv[])
 
 		Env env = {.init = false, .x = 0., .y = 0.};
 		srand(seed);
+
+		errno = 0;
 		const int ret = eval(ast, &env, iter_max, verbose);
-		switch (ret) {
-		case 0:
-			printf("(%lf, %lf)\n", env.x, env.y);
-			break;
-		case 1:
+		if (errno) {
 			ecode = false;
-			fprintf(stderr,
-				"%s: error: operation before initialization\n",
-				progname);
-			break;
-		case 2:
-			ecode = false;
-			fprintf(stderr, "%s: error: number argument expected\n",
-				progname);
-			break;
-		case 3:
-			ecode = false;
-			fprintf(stderr,
-				"%s: error: polynomial evaluation failed\n",
-				progname);
-			break;
-		default:
-			ecode = false;
-			fprintf(stderr, "%s: unknown error\n", progname);
-			break;
+			fprintf(stderr, "%s: error: %s\n", progname,
+				strerror(errno));
+			errno = 0;
+		} else {
+			switch (ret) {
+			case 0:
+				printf("(%lf, %lf)\n", env.x, env.y);
+				break;
+			case 1:
+				ecode = false;
+				fprintf(stderr,
+					"%s: error: operation before "
+					"initialization\n",
+					progname);
+				break;
+			case 2:
+				ecode = false;
+				fprintf(stderr,
+					"%s: error: number argument expected\n",
+					progname);
+				break;
+			case 3:
+				ecode = false;
+				fprintf(
+				    stderr,
+				    "%s: error: polynomial evaluation failed\n",
+				    progname);
+				break;
+			default:
+				ecode = false;
+				fprintf(stderr, "%s: unknown error\n",
+					progname);
+				break;
+			}
 		}
+	}
+
+	if (errno) {
+		ecode = false;
+		fprintf(stderr, "%s: error: %s\n", progname, strerror(errno));
 	}
 
 	// Clean up
